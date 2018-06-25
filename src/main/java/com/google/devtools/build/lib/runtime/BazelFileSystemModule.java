@@ -13,6 +13,7 @@
 // limitations under the License.
 package com.google.devtools.build.lib.runtime;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.unix.UnixFileSystem;
 import com.google.devtools.build.lib.util.AbruptExitException;
 import com.google.devtools.build.lib.util.ExitCode;
@@ -21,6 +22,8 @@ import com.google.devtools.build.lib.vfs.DigestHashFunction;
 import com.google.devtools.build.lib.vfs.DigestHashFunction.DigestFunctionConverter;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.JavaIoFileSystem;
+import com.google.devtools.build.lib.vfs.PathFragment;
+import com.google.devtools.build.lib.vfs.UnionFileSystem;
 import com.google.devtools.build.lib.windows.WindowsFileSystem;
 import com.google.devtools.common.options.OptionsParsingException;
 import com.google.devtools.common.options.OptionsProvider;
@@ -55,6 +58,10 @@ public class BazelFileSystemModule extends BlazeModule {
     // The JNI-based UnixFileSystem is faster, but on Windows it is not available.
     return OS.getCurrent() == OS.WINDOWS
         ? new WindowsFileSystem(hashFunction)
-        : new UnixFileSystem(hashFunction);
+        : new UnionFileSystem(
+                ImmutableMap.of(
+                    PathFragment.create("/tmp"), 
+                    new UnixFileSystem(hashFunction)), 
+                new UnixFileSystem(hashFunction));
   }
 }
